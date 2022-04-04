@@ -1,3 +1,4 @@
+import argparse
 from typing import List, Optional, Tuple
 import dataclasses
 
@@ -205,19 +206,24 @@ def plot_landmarks(
     plt.pause(0.001)
 
 
-if __name__ == "__main__":
+def main(args: argparse.Namespace):
     # mp_drawing = mp_drawing
     mp_pose = mp.solutions.pose
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")
-    fig.subplots_adjust(left=0.0, right=1, bottom=0, top=1)
-
     # create video capture
-    cap = cv2.VideoCapture("./media/dance.mp4")
+    if args.device.isnumeric():
+        # camera device index
+        cap = cv2.VideoCapture(int(args.device))
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
+    else:
+        # video file
+        cap = cv2.VideoCapture(args.device)
 
     with mp_pose.Pose(
-        model_complexity=1, min_detection_confidence=0.5, min_tracking_confidence=0.5, 
+        model_complexity=args.model_complexity,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5,
     ) as pose:
 
         while True:
@@ -255,7 +261,7 @@ if __name__ == "__main__":
                 )
 
             # plot world landmarks
-            if results.pose_world_landmarks is not None:
+            if args.plot_landmark and results.pose_world_landmarks is not None:
                 plot_landmarks(
                     results.pose_world_landmarks,
                     POSE_CONNECTIONS,
@@ -275,3 +281,37 @@ if __name__ == "__main__":
 
     cap.release()
     cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--device",
+        help="Camera device index or video file",
+        default="./media/dance.mp4",
+    )
+    parser.add_argument("--width", help="Camera width", type=int, default=640)
+    parser.add_argument("--height", help="Camera height", type=int, default=480)
+
+    parser.add_argument(
+        "--model_complexity",
+        help="model complexity (0:lite, 1:full(default), 2:heavy)",
+        type=int,
+        default=1,
+    )
+    parser.add_argument("--plot_landmark", help="plot 3d landmarks",action="store_true")
+
+    args = parser.parse_args()
+
+    # setup matplotlib
+    if args.plot_landmark:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+        fig.subplots_adjust(left=0.0, right=1, bottom=0, top=1)
+
+    ##############################
+    # Run the main function
+    ##############################
+    main(args)
