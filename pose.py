@@ -203,7 +203,16 @@ def plot_landmarks(
                     linewidth=connection_drawing_spec.thickness,
                 )
 
-    plt.pause(0.001)
+    # redraw the canvas
+    fig.canvas.draw()
+
+    # convert canvas to image
+    img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep="")
+    img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+
+    # plt.pause(0.001)
+
+    return img
 
 
 def main(args: argparse.Namespace):
@@ -226,6 +235,8 @@ def main(args: argparse.Namespace):
         min_tracking_confidence=0.5,
     ) as pose:
 
+        elevation = 10
+        azimuth = 10
         while True:
             # read frame
             ret, frame = cap.read()
@@ -262,15 +273,27 @@ def main(args: argparse.Namespace):
 
             # plot world landmarks
             if args.plot_landmark and results.pose_world_landmarks is not None:
-                plot_landmarks(
+                azimuth += 2
+                plot_img = plot_landmarks(
                     results.pose_world_landmarks,
                     POSE_CONNECTIONS,
                     landmark_drawing_spec=DrawingSpec(
-                        color=mp_drawing.RED_COLOR, thickness=3
+                        color=mp_drawing.RED_COLOR, thickness=1
                     ),
                     connection_drawing_spec=DrawingSpec(
                         color=mp_drawing.BLACK_COLOR, thickness=1
                     ),
+                    elevation=elevation,
+                    azimuth=azimuth,
+                )
+
+                # overlay on frame
+                # plot_img = cv2.resize(plot_img, (320, 240))
+                plot_img = cv2.cvtColor(plot_img, cv2.COLOR_RGB2BGR)
+                frame[0 : plot_img.shape[0], 0 : plot_img.shape[1]] = np.where(
+                    plot_img == (255, 255, 255),
+                    frame[0 : plot_img.shape[0], 0 : plot_img.shape[1]],
+                    plot_img,
                 )
 
             if cv2.waitKey(1) & 0xFF == 27:
@@ -301,13 +324,15 @@ if __name__ == "__main__":
         type=int,
         default=1,
     )
-    parser.add_argument("--plot_landmark", help="plot 3d landmarks",action="store_true")
+    parser.add_argument(
+        "--plot_landmark", help="plot 3d landmarks", action="store_true"
+    )
 
     args = parser.parse_args()
 
     # setup matplotlib
     if args.plot_landmark:
-        fig = plt.figure()
+        fig = plt.figure(figsize=(3.2, 2.4), dpi=100)
         ax = fig.add_subplot(111, projection="3d")
         fig.subplots_adjust(left=0.0, right=1, bottom=0, top=1)
 
