@@ -36,4 +36,3 @@ python pose.py --device ./media/dance.mp4 --model_complexity 1 --plot_landmark
 ```
 
 ![image view](./docs/img/image_view.png)
-![3d plot](./docs/img/3d%20plot.png)
