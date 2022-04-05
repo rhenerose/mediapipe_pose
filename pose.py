@@ -157,6 +157,7 @@ def plot_landmarks(
     ax.set_xlim3d(-1, 1)
     ax.set_ylim3d(-1, 1)
     ax.set_zlim3d(-1, 1)
+    ax.tick_params(labelbottom=False, labelleft=False, labelright=False, labeltop=False)
 
     plotted_landmarks = {}
     for idx, landmark in enumerate(landmark_list.landmark):
@@ -207,7 +208,7 @@ def plot_landmarks(
     fig.canvas.draw()
 
     # convert canvas to image
-    img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep="")
+    img = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
     img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
 
     # plt.pause(0.001)
