@@ -291,11 +291,9 @@ def main(args: argparse.Namespace):
                 # overlay on frame
                 # plot_img = cv2.resize(plot_img, (320, 240))
                 plot_img = cv2.cvtColor(plot_img, cv2.COLOR_RGB2BGR)
-                frame[0 : plot_img.shape[0], 0 : plot_img.shape[1]] = np.where(
-                    plot_img == (255, 255, 255),
-                    frame[0 : plot_img.shape[0], 0 : plot_img.shape[1]],
-                    plot_img,
-                )
+                alpha = 0.5
+                overlay_img = cv2.addWeighted(plot_img, alpha, frame[0 : plot_img.shape[0], 0 : plot_img.shape[1]], 1 - alpha, 0)
+                frame[0 : plot_img.shape[0], 0 : plot_img.shape[1]] = overlay_img
 
             if cv2.waitKey(1) & 0xFF == 27:
                 break
